@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Home, UtensilsCrossed, ShoppingBag, ClipboardList, ChefHat, LayoutDashboard } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Home, UtensilsCrossed, ShoppingBag, ChefHat, LayoutDashboard } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 
@@ -9,13 +9,11 @@ interface NavItem {
   to: string;
   icon: React.ElementType;
   label: string;
-  isExternal?: boolean;
 }
 
 const customerNav: NavItem[] = [
   { to: '/', icon: Home, label: 'Home' },
-  { to: '/#menu', icon: UtensilsCrossed, label: 'Menu' },
-  { to: '/#features', icon: ClipboardList, label: 'Features' },
+  { to: '/menu', icon: UtensilsCrossed, label: 'Menu' },
   { to: '/cart', icon: ShoppingBag, label: 'Cart' },
 ];
 
@@ -29,7 +27,6 @@ export function GlassNavbar() {
   const location = useLocation();
   const { totalItems } = useCart();
   const [scrolled, setScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState('home');
 
   const isStaffView = location.pathname.startsWith('/kitchen') || location.pathname.startsWith('/admin');
   const navItems = isStaffView ? staffNav : customerNav;
@@ -37,40 +34,15 @@ export function GlassNavbar() {
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
-      
-      // Detect active section
-      const sections = ['hero', 'features', 'menu'];
-      for (const section of sections.reverse()) {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top <= 200) {
-            setActiveSection(section === 'hero' ? 'home' : section);
-            break;
-          }
-        }
-      }
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleNavClick = (to: string) => {
-    if (to.startsWith('/#')) {
-      const sectionId = to.replace('/#', '');
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  };
-
   const isActive = (item: NavItem) => {
-    if (item.to === '/') return activeSection === 'home' && location.pathname === '/';
-    if (item.to === '/#menu') return activeSection === 'menu';
-    if (item.to === '/#features') return activeSection === 'features';
-    return location.pathname === item.to;
+    if (item.to === '/') return location.pathname === '/';
+    return location.pathname.startsWith(item.to);
   };
 
   return (
@@ -99,8 +71,7 @@ export function GlassNavbar() {
           return (
             <Link
               key={item.to}
-              to={item.to.startsWith('/#') ? '/' : item.to}
-              onClick={() => handleNavClick(item.to)}
+              to={item.to}
               className={cn(
                 'relative flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-300',
                 active

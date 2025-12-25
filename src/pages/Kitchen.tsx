@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, ChefHat, Bell, Check, AlertCircle, Volume2, VolumeX } from 'lucide-react';
+import { Clock, ChefHat, Bell, Check, AlertCircle, Volume2, VolumeX, Home } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useOrders } from '@/context/OrdersContext';
 import { Order, OrderStatus } from '@/types/restaurant';
 import { Button } from '@/components/ui/button';
+import { PageTransition } from '@/components/layout/PageTransition';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -35,107 +37,115 @@ const Kitchen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <ChefHat className="w-5 h-5 text-primary-foreground" />
+    <PageTransition>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                <ChefHat className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="font-display text-xl font-semibold">Kitchen Display</h1>
+                <p className="text-xs text-muted-foreground">
+                  {activeOrders.length} active orders
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="font-display text-xl font-semibold">Kitchen Display</h1>
-              <p className="text-xs text-muted-foreground">
-                {activeOrders.length} active orders
-              </p>
+
+            <div className="flex items-center gap-3">
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/">
+                  <Home className="w-4 h-4 mr-2" />
+                  Home
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className="text-muted-foreground"
+              >
+                {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+              </Button>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary">
+                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                <span className="text-sm font-medium">Live</span>
+              </div>
             </div>
           </div>
+        </header>
 
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="text-muted-foreground"
+        {/* Orders Grid */}
+        <main className="container mx-auto p-4">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Pending Column */}
+            <OrderColumn
+              title="New Orders"
+              count={pendingOrders.length}
+              color="warning"
+              icon={AlertCircle}
             >
-              {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-            </Button>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary">
-              <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-              <span className="text-sm font-medium">Live</span>
-            </div>
+              <AnimatePresence mode="popLayout">
+                {pendingOrders.map((order) => (
+                  <KitchenOrderCard
+                    key={order.id}
+                    order={order}
+                    elapsedTime={getElapsedTime(order.createdAt)}
+                    onAccept={() => handleStatusUpdate(order.id, 'preparing')}
+                    status="pending"
+                  />
+                ))}
+              </AnimatePresence>
+              {pendingOrders.length === 0 && <EmptyState message="No new orders" />}
+            </OrderColumn>
+
+            {/* Preparing Column */}
+            <OrderColumn
+              title="Preparing"
+              count={preparingOrders.length}
+              color="info"
+              icon={ChefHat}
+            >
+              <AnimatePresence mode="popLayout">
+                {preparingOrders.map((order) => (
+                  <KitchenOrderCard
+                    key={order.id}
+                    order={order}
+                    elapsedTime={getElapsedTime(order.createdAt)}
+                    onMarkReady={() => handleStatusUpdate(order.id, 'ready')}
+                    status="preparing"
+                  />
+                ))}
+              </AnimatePresence>
+              {preparingOrders.length === 0 && <EmptyState message="No orders being prepared" />}
+            </OrderColumn>
+
+            {/* Ready Column */}
+            <OrderColumn
+              title="Ready to Serve"
+              count={readyOrders.length}
+              color="success"
+              icon={Bell}
+            >
+              <AnimatePresence mode="popLayout">
+                {readyOrders.map((order) => (
+                  <KitchenOrderCard
+                    key={order.id}
+                    order={order}
+                    elapsedTime={getElapsedTime(order.createdAt)}
+                    onServed={() => handleStatusUpdate(order.id, 'served')}
+                    status="ready"
+                  />
+                ))}
+              </AnimatePresence>
+              {readyOrders.length === 0 && <EmptyState message="No orders ready" />}
+            </OrderColumn>
           </div>
-        </div>
-      </header>
-
-      {/* Orders Grid */}
-      <main className="container mx-auto p-4">
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Pending Column */}
-          <OrderColumn
-            title="New Orders"
-            count={pendingOrders.length}
-            color="warning"
-            icon={AlertCircle}
-          >
-            <AnimatePresence mode="popLayout">
-              {pendingOrders.map((order) => (
-                <KitchenOrderCard
-                  key={order.id}
-                  order={order}
-                  elapsedTime={getElapsedTime(order.createdAt)}
-                  onAccept={() => handleStatusUpdate(order.id, 'preparing')}
-                  status="pending"
-                />
-              ))}
-            </AnimatePresence>
-            {pendingOrders.length === 0 && <EmptyState message="No new orders" />}
-          </OrderColumn>
-
-          {/* Preparing Column */}
-          <OrderColumn
-            title="Preparing"
-            count={preparingOrders.length}
-            color="info"
-            icon={ChefHat}
-          >
-            <AnimatePresence mode="popLayout">
-              {preparingOrders.map((order) => (
-                <KitchenOrderCard
-                  key={order.id}
-                  order={order}
-                  elapsedTime={getElapsedTime(order.createdAt)}
-                  onMarkReady={() => handleStatusUpdate(order.id, 'ready')}
-                  status="preparing"
-                />
-              ))}
-            </AnimatePresence>
-            {preparingOrders.length === 0 && <EmptyState message="No orders being prepared" />}
-          </OrderColumn>
-
-          {/* Ready Column */}
-          <OrderColumn
-            title="Ready to Serve"
-            count={readyOrders.length}
-            color="success"
-            icon={Bell}
-          >
-            <AnimatePresence mode="popLayout">
-              {readyOrders.map((order) => (
-                <KitchenOrderCard
-                  key={order.id}
-                  order={order}
-                  elapsedTime={getElapsedTime(order.createdAt)}
-                  onServed={() => handleStatusUpdate(order.id, 'served')}
-                  status="ready"
-                />
-              ))}
-            </AnimatePresence>
-            {readyOrders.length === 0 && <EmptyState message="No orders ready" />}
-          </OrderColumn>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </PageTransition>
   );
 };
 
