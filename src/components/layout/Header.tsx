@@ -1,15 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Utensils, ShoppingBag, ChefHat, LayoutDashboard } from 'lucide-react';
+import { Utensils, ShoppingBag, ChefHat, LayoutDashboard, Home } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const location = useLocation();
   const { totalItems } = useCart();
-
-  const isCustomerView = !location.pathname.startsWith('/kitchen') && !location.pathname.startsWith('/admin');
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -22,33 +20,27 @@ export function Header() {
         </Link>
 
         <nav className="flex items-center gap-1">
-          {isCustomerView ? (
-            <>
-              <Link
-                to="/cart"
-                className={cn(
-                  'relative p-2.5 rounded-full transition-colors',
-                  location.pathname === '/cart' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                )}
+          <NavLink to="/" icon={Home} label="Home" exact />
+          <NavLink to="/kitchen" icon={ChefHat} label="Kitchen" />
+          <NavLink to="/admin" icon={LayoutDashboard} label="Admin" />
+          <Link
+            to="/cart"
+            className={cn(
+              'relative p-2.5 rounded-full transition-colors',
+              location.pathname === '/cart' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+            )}
+          >
+            <ShoppingBag className="w-5 h-5" />
+            {totalItems > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-accent-foreground text-xs font-bold rounded-full flex items-center justify-center"
               >
-                <ShoppingBag className="w-5 h-5" />
-                {totalItems > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-accent-foreground text-xs font-bold rounded-full flex items-center justify-center"
-                  >
-                    {totalItems}
-                  </motion.span>
-                )}
-              </Link>
-            </>
-          ) : (
-            <>
-              <NavLink to="/kitchen" icon={ChefHat} label="Kitchen" />
-              <NavLink to="/admin" icon={LayoutDashboard} label="Admin" />
-            </>
-          )}
+                {totalItems}
+              </motion.span>
+            )}
+          </Link>
         </nav>
       </div>
     </header>
@@ -59,11 +51,12 @@ interface NavLinkProps {
   to: string;
   icon: React.ElementType;
   label: string;
+  exact?: boolean;
 }
 
-function NavLink({ to, icon: Icon, label }: NavLinkProps) {
+function NavLink({ to, icon: Icon, label, exact }: NavLinkProps) {
   const location = useLocation();
-  const isActive = location.pathname.startsWith(to);
+  const isActive = exact ? location.pathname === to : location.pathname.startsWith(to);
 
   return (
     <Link

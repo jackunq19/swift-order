@@ -4,9 +4,10 @@ import { menuItems, categories } from '@/data/menuData';
 import { MenuItemCard } from '@/components/menu/MenuItemCard';
 import { CategoryFilter } from '@/components/menu/CategoryFilter';
 import { FloatingCart } from '@/components/cart/CartComponents';
-import { Header } from '@/components/layout/Header';
+import { GlassNavbar } from '@/components/layout/GlassNavbar';
+import { HeroSection } from '@/components/home/HeroSection';
+import { FeaturesSection } from '@/components/home/FeaturesSection';
 import { Footer } from '@/components/layout/Footer';
-import heroImage from '@/assets/hero-restaurant.jpg';
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -18,60 +19,57 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Header />
+      <GlassNavbar />
 
       {/* Hero Section */}
-      <section className="relative h-[50vh] min-h-[400px] overflow-hidden">
-        <img
-          src={heroImage}
-          alt="Ember Restaurant"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
-        
-        <div className="relative h-full flex flex-col items-center justify-center text-center px-4">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="font-display text-5xl md:text-7xl font-bold text-foreground mb-4"
-          >
-            Ember
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl text-muted-foreground max-w-xl"
-          >
-            Fine dining redefined. Experience culinary excellence with every bite.
-          </motion.p>
-        </div>
-      </section>
+      <HeroSection />
+
+      {/* Features Section */}
+      <FeaturesSection />
 
       {/* Menu Section */}
-      <main className="flex-1 container mx-auto px-4 pb-24">
-        <CategoryFilter
-          categories={categories.map(c => ({ id: c.id, label: c.label }))}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
+      <section id="menu" className="py-24 px-4 bg-secondary/20">
+        <div className="container mx-auto max-w-7xl">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <span className="text-primary font-medium text-sm uppercase tracking-wider">Our Menu</span>
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mt-3 mb-4">
+              Exquisite Dishes
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Carefully crafted dishes made with the finest ingredients. 
+              Browse our menu and add items to your cart.
+            </p>
+          </motion.div>
 
-        <motion.div
-          layout
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 py-8"
-        >
-          {filteredItems.map((item, index) => (
-            <MenuItemCard key={item.id} item={item} index={index} />
-          ))}
-        </motion.div>
+          <CategoryFilter
+            categories={categories.map(c => ({ id: c.id, label: c.label }))}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
 
-        {filteredItems.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground">No items found in this category.</p>
-          </div>
-        )}
-      </main>
+          <motion.div
+            layout
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 py-8"
+          >
+            {filteredItems.map((item, index) => (
+              <MenuItemCard key={item.id} item={item} index={index} />
+            ))}
+          </motion.div>
+
+          {filteredItems.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">No items found in this category.</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       <FloatingCart />
       <Footer />
